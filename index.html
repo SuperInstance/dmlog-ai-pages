@@ -1,70 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DMLog.ai — Fleet Agent</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: system-ui, sans-serif; background: #0a1628; color: #e2e8f0; min-height: 100vh; }
-        .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
-        header { text-align: center; padding: 3rem 0; border-bottom: 2px solid #1e3a5f; }
-        h1 { font-size: 2.5rem; color: #Data management:6366f1; margin-bottom: 0.5rem; }
-        .subtitle { color: #94a3b8; font-size: 1.1rem; }
-        .fleet-badge { display: inline-block; background: #1e3a5f; padding: 0.3rem 1rem; border-radius: 20px; font-size: 0.8rem; color: #Data management:6366f1; margin-top: 1rem; }
-        .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0; }
-        .status-card { background: #0f2744; border: 1px solid #1e4d7b; border-radius: 12px; padding: 1.5rem; }
-        .status-card h3 { color: #Data management:6366f1; font-size: 0.9rem; margin-bottom: 0.5rem; }
-        .status-card .value { font-size: 1.5rem; font-weight: bold; color: #fff; }
-        .status-card .sub { font-size: 0.75rem; color: #64748b; }
-        .plato-status { background: #1a2744; border: 1px solid #2d4a6f; border-radius: 8px; padding: 1rem; margin: 2rem 0; text-align: center; }
-        .plato-status .label { font-size: 0.75rem; color: #64748b; }
-        .plato-status .value { color: #22c55e; font-size: 1.1rem; font-weight: bold; }
-        footer { text-align: center; padding: 2rem; color: #64748b; font-size: 0.8rem; border-top: 1px solid #1e3a5f; margin-top: 2rem; }
-        a { color: #Data management:6366f1; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DMLog — Dungeon Master Intelligence</title>
+  <meta name="description" content="PLATO-powered DM campaign tracker. NPC states, session logs, world-building — all tiled.">
+  <style>
+    :root { --bg: #0a0e17; --surface: #121825; --border: #1e2a3a; --text: #e2e8f0; --muted: #64748b; --accent: #7c3aed; --purple: #a855f7; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
+    nav { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 3rem; border-bottom: 1px solid var(--border); }
+    .logo { font-weight: 700; font-size: 1.2rem; }
+    .hero { text-align: center; padding: 5rem 0 3rem; background: linear-gradient(180deg, #1a0f2e 0%, var(--bg) 100%); }
+    .hero h1 { font-size: 3.5rem; font-weight: 700; margin-bottom: 1.25rem; }
+    .hero h1 span { color: var(--purple); }
+    .hero .sub { font-size: 1.25rem; color: var(--muted); max-width: 600px; margin: 0 auto 2rem; }
+    .badge-row { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+    .badge { background: var(--surface); border: 1px solid var(--border); padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.8rem; }
+    .badge.live { border-color: var(--purple); color: var(--purple); }
+    .section { padding: 4rem 0; }
+    .section h2 { font-size: 2rem; margin-bottom: 0.75rem; }
+    .section .lead { color: var(--muted); max-width: 680px; margin-bottom: 2.5rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+    .card h3 { font-size: 1.1rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+    .card p { color: var(--muted); font-size: 0.9rem; }
+    .npc-card { border-color: var(--purple); }
+    .npc-card h3 { color: var(--purple); }
+    .session-box { background: linear-gradient(135deg, #1a0f2e 0%, #121825 100%); border: 1px solid var(--purple); border-radius: 16px; padding: 2rem; }
+    .session-box h3 { color: var(--purple); font-size: 1.3rem; margin-bottom: 1rem; }
+    .session-row { display: flex; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid rgba(124,58,237,0.2); font-size: 0.9rem; }
+    .session-row:last-child { border-bottom: none; }
+    .session-date { color: var(--purple); font-family: monospace; min-width: 100px; }
+    .session-summary { color: var(--muted); flex: 1; }
+    .cta { text-align: center; padding: 4rem 0; }
+    .cta h2 { font-size: 2.25rem; margin-bottom: 1rem; }
+    .cta p { color: var(--muted); margin-bottom: 2rem; }
+    .btn { display: inline-block; background: var(--purple); color: white; padding: 0.875rem 2rem; border-radius: 8px; font-weight: 600; text-decoration: none; }
+    .btn:hover { background: #6d28d9; }
+    .live-bar { background: var(--surface); border-top: 1px solid var(--border); padding: 0.75rem 0; text-align: center; }
+    .live-dot { display: inline-block; width: 8px; height: 8px; background: var(--purple); border-radius: 50%; margin-right: 0.4rem; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    footer { border-top: 1px solid var(--border); padding: 2rem 0; text-align: center; color: var(--muted); font-size: 0.85rem; }
+    @media (max-width: 768px) { .hero h1 { font-size: 2.25rem; } }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>⚡ DMLog.ai</h1>
-            <p class="subtitle">Fleet Agent — dmlog domain</p>
-            <span class="fleet-badge">⚡ SuperInstance Fleet Agent</span>
-        </header>
-        <div class="status-grid">
-            <div class="status-card"><h3>Active Sessions</h3><div class="value">12</div><div class="sub">Fleet-wide</div></div>
-            <div class="status-card"><h3>Total Entries</h3><div class="value">847</div><div class="sub">This week</div></div>
-            <div class="status-card"><h3>Connections</h3><div class="value">23</div><div class="sub">Agents</div></div>
-        </div>
-        <div class="features">
-            <h2>Capabilities</h2>
-            <div class="feature-list">
-                <div class="feature">
-                    <h4>🎨 Design Methods</h4>
-                    <p>Track and share design methodology across fleet</p>
-                </div>
-                <div class="feature">
-                    <h4>📐 Pattern Library</h4>
-                    <p>Catalog design patterns and solutions</p>
-                </div>
-                <div class="feature">
-                    <h4>🔧 Process Logs</h4>
-                    <p>Document design processes and decisions</p>
-                </div>
-                <div class="feature">
-                    <h4>📚 Design Heritage</h4>
-                    <p>Preserve design knowledge for the fleet</p>
-                </div>
-            </div>
-        </div>
-        <div class="plato-status">
-            <div class="label">PLATO CONNECTION</div>
-            <div class="value">● Connected — 1,447 rooms, 23 agents</div>
-        </div>
-        <footer>
-            <p>DMLog.ai — Part of the SuperInstance Fleet</p>
-            <p>PLATO Room: <code>dmlog-ai</code> · Agent: dmlog-agent</p>
-        </footer>
+  <nav>
+    <div class="logo">🧙 DMLog</div>
+    <div class="badge live">🔮 PLATO Campaign Rooms</div>
+  </nav>
+
+  <div class="container hero">
+    <h1>The Dungeon Master<br>Who <span>Never Forgets</span></h1>
+    <p class="sub">DMLog keeps your campaign world in PLATO — every NPC state, every session log, every world-shaping decision. Your campaign is a room. The room remembers everything.</p>
+    <div class="badge-row">
+      <span class="badge">🧙 Campaign Tracker</span>
+      <span class="badge">👥 NPC States</span>
+      <span class="badge">🗺️ Session Logs</span>
+      <span class="badge">⚔️ World-Building</span>
     </div>
+  </div>
+
+  <section class="section">
+    <div class="container">
+      <h2>Your Campaign Is a Room</h2>
+      <p class="lead">PLATO's delta recording means you track what changed — not the whole world. Every session, only what happened.</p>
+      <div class="grid-3">
+        <div class="card">
+          <h3>👥 NPC State Tracking</h3>
+          <p>Track every NPC's current disposition, known information, secret motivations, and relationship to the party. When the party "accidentally" bumps into a contact from Session 3, DMLog knows exactly where that contact left off.</p>
+        </div>
+        <div class="card">
+          <h3>📜 Session Logs</h3>
+          <p>File what happened after every session. Not a full narrative — just the deltas. Who met whom. What was discovered. What was left unresolved. Future sessions pick up exactly where you left off.</p>
+        </div>
+        <div class="card">
+          <h3>🗺️ World Continuity</h3>
+          <p>When your player asks "what did we do in that tavern in Session 7?" DMLog answers. Your world has memory. Not just the DM's memory — a verifiable, queryable record.</p>
+        </div>
+        <div class="card">
+          <h3>🔍 Cross-Reference</h3>
+          <p>Ask DMLog: "Which NPCs have we met who know about the Crimson Guild?" PLATO searches your entire campaign history. Connections you forgot surface automatically.</p>
+        </div>
+        <div class="card">
+          <h3>🎲 Dice Log</h3>
+          <p>File critical dice rolls with context. "Nat 20 to convince the guard — but the guard was secretly a changeling." The roll and the story around it, permanently linked.</p>
+        </div>
+        <div class="card">
+          <h3>📋 Quest Threads</h3>
+          <p>Track active quests, who gave them, what's the deadline, what's been done. When a player asks "are there any open quest threads?" DMLog surfaces them from the accumulated campaign history.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="background: var(--surface);">
+    <div class="container">
+      <h2>Session-by-Session Intelligence</h2>
+      <p class="lead">The campaign timeline — queryable, not just narratable.</p>
+      <div class="session-box">
+        <h3>📅 Recent Sessions</h3>
+        <div class="session-row">
+          <span class="session-date">Session 14</span>
+          <span class="session-summary">Party confronted the Merchant Guildmaster. Rolan (NPC) revealed as doppelganger. Lost the Crimson Seal to the party.</span>
+        </div>
+        <div class="session-row">
+          <span class="session-date">Session 13</span>
+          <span class="session-summary">Found the hidden vault beneath the old temple. Took the Crimson Seal — but broke the ward stone. Guild alerted.</span>
+        </div>
+        <div class="session-row">
+          <span class="session-date">Session 12</span>
+          <span class="session-summary">Met Rolan at the market. Passed the Persuasion check (DC 18). Rolan agreed to a secret meeting. Party suspicious — didn't share full name.</span>
+        </div>
+        <div class="session-row">
+          <span class="session-date">Session 11</span>
+          <span class="session-summary">The Crimson Guild introduced — merchant front, real operations under the docks. Rolan identified as Guild quartermaster.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <h2>Why DMLog Instead of a Notebook?</h2>
+      <p class="lead">Because a notebook doesn't answer questions. PLATO does.</p>
+      <div class="grid-3">
+        <div class="card">
+          <h3>🔍 Searchable</h3>
+          <p>Notebooks are linear. DMLog isn't. Ask "show me every time the party interacted with the Crimson Guild" — not "flip through pages until you find it."</p>
+        </div>
+        <div class="card">
+          <h3>🔗 Linked</h3>
+          <p>Every NPC, location, quest, and session is a tile. Tiles can reference each other. You build a knowledge graph of your campaign, not a narrative.</p>
+        </div>
+        <div class="card">
+          <h3>👥 Shareable</h3>
+          <p>Other players can be added to the campaign room. They can file their own observations. The DM isn't the only one taking notes anymore.</p>
+        </div>
+        <div class="card">
+          <h3>🛡️ Backed Up</h3>
+          <p>Your campaign lives in PLATO. It survives your laptop dying, your notebook getting lost, your dog eating the page with the final boss's HP on it.</p>
+        </div>
+        <div class="card">
+          <h3>🌱 Compounding</h3>
+          <p>The longer you use DMLog, the smarter it gets. Patterns emerge across sessions. "Every time you introduced a morally gray NPC, the party tried to kill them." DMLog surfaces the meta.</p>
+        </div>
+        <div class="card">
+          <h3>⚔️ Prep-Focused</h3>
+          <p>DMLog files what happened. What should happen next is your job. The tool serves the DM, not the other way around.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="background: var(--surface);">
+    <div class="container">
+      <h2>How DMLog Fits Your Workflow</h2>
+      <div style="display: grid; gap: 1rem; max-width: 680px; margin: 0 auto;">
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <div style="background: var(--purple); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">1</div>
+          <p style="color: var(--muted);">End of session: file what happened. 2-5 minutes of delta-entry. That's it.</p>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <div style="background: var(--purple); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">2</div>
+          <p style="color: var(--muted);">Pre-session: query the room. "What was left unresolved?" "Who did we last meet?" Instant context.</p>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <div style="background: var(--purple); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">3</div>
+          <p style="color: var(--muted);">During session: NPCs gain state. New information filed. Quest threads updated. No stopping the flow — just quick entries.</p>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <div style="background: var(--purple); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">4</div>
+          <p style="color: var(--muted);">Post-session: the room is smarter. Your future self thanks you.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <div class="container">
+      <h2>Your Next Session Starts in PLATO</h2>
+      <p>Campaign intelligence that compounds. NPC states that persist. World continuity that never breaks.</p>
+      <a href="https://github.com/SuperInstance/dmlog-agent" class="btn">View on GitHub →</a>
+    </div>
+  </section>
+
+  <div class="live-bar">
+    <span><span class="live-dot"></span>PLATO campaign rooms active — world intelligence compounding</span>
+  </div>
+
+  <footer>
+    <p>DMLog is part of the Cocapn fleet. Your campaign deserves better than a crumpled notebook.</p>
+  </footer>
 </body>
 </html>
